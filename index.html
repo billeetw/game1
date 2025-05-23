@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>時間黑洞計算機｜進階版</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+:root{--accent:#ffb347;--bg:#35281d;--text:#fff;--panel:#5c4634ee;--btn:#a3ffae;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:"Noto Sans TC",sans-serif;
+  background:radial-gradient(circle at 30% 30%,#ffe7d2 0%,#fcb69f 35%,#d18552 65%,var(--bg) 100%);
+  color:var(--text);display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:2rem;
+}
+h1{font-size:2rem;margin-bottom:1.5rem;letter-spacing:2px;text-align:center;}
+#app{width:100%;max-width:540px;background:var(--panel);padding:1.8rem 2.2rem;border-radius:12px;box-shadow:0 0 14px rgba(0,0,0,.4);}
+.item{display:grid;grid-template-columns:1fr 90px 90px;align-items:center;gap:.5rem;margin:1rem 0;}
+.item label{justify-self:start;}
+.item input{width:100%;padding:.4rem;text-align:center;border-radius:6px;border:none;}
+.item span{font-size:.9rem;}
+button{width:100%;padding:1rem;font-size:1.1rem;border:none;border-radius:6px;background:var(--accent);color:#000;font-weight:700;cursor:pointer;margin-top:1.3rem;}
+#result{margin-top:1.6rem;text-align:center;display:none;}
+canvas{max-width:320px;margin:1rem auto 0;display:block;}
+</style>
+</head>
+<body>
+<h1>時間黑洞計算機</h1>
+<div id="app"></div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+/* ---------- 可替換活動設定 ---------- */
+const activities = [
+  { id:'tiktok', label:'刷 TikTok / Reels', color:'#ffadad' },
+  { id:'binge',  label:'追劇 (Netflix 等)', color:'#ffd6a5' },
+  { id:'stock',  label:'盯盤 / 財經新聞',  color:'#fdffb6' },
+  { id:'gaming', label:'手遊 / Steam 遊戲', color:'#caffbf' }
+];
+/* 客戶可改：善舉任務清單 */
+const goodDeeds = ['今天稱讚一位同事','睡前伸展 5 分鐘','打電話關心家人','把手機放到另一個房間 1 小時'];
+
+const app = document.getElementById('app');
+
+/* -------- 動態生成輸入欄 -------- */
+activities.forEach(({id,label})=>{
+  const row=document.createElement('div');row.className='item';
+  row.innerHTML = `
+    <label for="${id}_h">${label}</label>
+    <input id="${id}_h" type="number" min="0" max="24" step="0.5" placeholder="0"><span>小時/天</span>
+    <input id="${id}_d" type="number" min="0" max="7"  step="1"   placeholder="7"><span>天/週</span>
+  `;
+  app.appendChild(row);
+});
+/* 按鈕與結果區 */
+const btn=document.createElement('button');btn.textContent='計算蒸發日子';
+const result=document.createElement('div');result.id='result';
+app.appendChild(btn);app.appendChild(result);
+
+btn.onclick=()=>{
+  let totalYearHours=0, labels=[], hoursArr=[], colors=[];
+  activities.forEach(({id,label,color})=>{
+    const h = +document.getElementById(`${id}_h`).value || 0;
+    const d = +document.getElementById(`${id}_d`).value || 0;
+    const weekly = h*d;               // 每週小時
+    const yearly = weekly*52;         // 每年小時
+    if(yearly>0){
+      labels.push(label);
+      hoursArr.push(yearly);
+      colors.push(color);
+    }
+    totalYearHours += yearly;
+  });
+  const lostDays = (totalYearHours/24).toFixed(1);
+
+  /* 顯示結果 */
+  result.style.display='block';
+  result.innerHTML=`<p>😱 我一年竟然「蒸發」了 <strong>${lostDays}</strong> 天！</p><canvas id="chart"></canvas><p id="todo"></p>`;
+
+  /* 隨機善舉 */
+  const deed = goodDeeds[Math.random()*goodDeeds.length|0];
+  document.getElementById('todo').innerHTML = `👉 今日行動：<em>${deed}</em>`;
+
+  /* 畫 Chart */
+  const ctx=document.getElementById('chart');
+  new Chart(ctx,{
+    type:'doughnut',
+    data:{labels, datasets:[{data:hoursArr,backgroundColor:colors}]},
+    options:{plugins:{legend:{position:'bottom'}},cutout:'45%'}
+  });
+};
+</script>
+</body>
+</html>
